@@ -41,11 +41,6 @@ const Home = () => {
       ) : (
         <ActorGrid data={results} />
       );
-      // return results[0].show
-      //   ? results.map(item => <div key={item.show.id}>{item.show.name}</div>)
-      //   : results.map(item => (
-      //       <div key={item.person.id}>{item.person.name}</div>
-      //     ));
     }
 
     return null;
