@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { useReducer, useEffect } from 'react';
 
 function showsReducer(prevState, action) {
