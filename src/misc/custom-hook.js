@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useState } from 'react';
+import { apiGet } from './config';
 
 function showsReducer(prevState, action) {
   switch (action.type) {
@@ -32,4 +33,58 @@ function userPersistedReducer(reducer, initialState, key) {
 
 export function useShows(key = 'shows') {
   return userPersistedReducer(showsReducer, [], key);
+}
+
+export function useLastQuery(key = 'lastQuery') {
+  const [input, setInput] = useState(() => {
+    const persisted = sessionStorage.getItem(key);
+
+    return persisted ? JSON.parse(persisted) : '';
+  });
+
+  const setPersistedInput = newState => {
+    setInput(newState);
+    sessionStorage.setItem(key, JSON.stringify(newState));
+  };
+
+  return [input, setPersistedInput];
+}
+
+const reducer = (prevState, action) => {
+  if (action.type === 'FETCH_SUCCESS') {
+    return { ...prevState, isLoading: false, show: action.show };
+  }
+  if (action.type === 'FETCH_FAILED') {
+    return { ...prevState, isLoading: false, error: action.error };
+  }
+  return prevState;
+};
+
+export function useShow(showId) {
+  const [state, dispatch] = useReducer(reducer, {
+    show: null,
+    isLoading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    apiGet(`/shows/${showId}?embed[]=seasons&embed[]=cast`)
+      .then(res => {
+        if (isMounted) {
+          dispatch({ type: 'FETCH_SUCCESS', show: res });
+        }
+      })
+      .catch(err => {
+        if (isMounted) {
+          dispatch({ type: 'FETCH_FAILED', error: err.message });
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [showId]);
+
+  return state;
 }
